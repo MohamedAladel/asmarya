@@ -288,6 +288,60 @@ export class WebsiteController {
     return books;
   }
 
+  @Get('/store-books')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Get Books' })
+  @ApiResponse({
+    status: 200,
+    description: 'Books retrieved',
+    type: BookDTO,
+    // isArray: true,
+  })
+  async getStoreBooks(
+    @Req() req: Request,
+    @Query('search') search?: string, // Add search as a query parameter
+  ): Promise<BookDTO[]> {
+    const user: any = req.user;
+    const learner = await this.learnerService.findByFields({ where: { user: { id: user.id } } });
+    const pageRequest: PageRequest = new PageRequest(req.query.page, req.query.size, req.query.sort);
+
+    // Define the search conditions
+    let searchCondition = {};
+    if (search) {
+      searchCondition = {
+        skip: +pageRequest.page * pageRequest.size,
+        take: +pageRequest.size,
+        order: pageRequest.sort.asOrder(),
+        where: [
+          { title: Like(`%${search}%`) },
+          { author: Like(`%${search}%`) },
+          { description: Like(`%${search}%`) },
+          // Add more fields as needed
+        ],
+      };
+    } else {
+      searchCondition = {
+        skip: +pageRequest.page * pageRequest.size,
+        take: +pageRequest.size,
+        order: pageRequest.sort.asOrder(),
+      };
+    }
+
+    // Fetch books with the search condition
+    const [books, _] = await this.bookService.findAndCount(searchCondition);
+
+    for (const book of books) {
+      const favorite = await this.favoriteService.findByFields({
+        where: { learner: { id: learner.id }, book: { id: book.id } },
+      });
+      book.isFavorite = !!favorite;
+    }
+    HeaderUtil.addPaginationHeaders(req.res, new Page(books, _, pageRequest));
+
+    return books;
+  }
+
   @Get('/my-books')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
@@ -382,7 +436,6 @@ export class WebsiteController {
 
     return book;
   }
-
   @Get('/all-courses')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
@@ -421,6 +474,64 @@ export class WebsiteController {
       });
       course.isFavorite = !!favorite;
     }
+
+    return courses;
+  }
+
+  @Get('/store-courses')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @ApiOperation({ summary: 'Get courses' })
+  @ApiResponse({
+    status: 200,
+    description: 'Courses retrieved',
+    type: CourseDTO,
+    isArray: true,
+  })
+  async getStoreCourses(
+    @Req() req: Request,
+    @Query('search') search?: string, // Add search as a query parameter
+  ): Promise<CourseDTO[]> {
+    const user: any = req.user;
+    const learner = await this.learnerService.findByFields({ where: { user: { id: user.id } } });
+    const pageRequest: PageRequest = new PageRequest(req.query.page, req.query.size, req.query.sort);
+
+    // Define the search conditions
+    let searchCondition = {};
+    if (search) {
+      searchCondition = {
+        where: [
+          { title: Like(`%${search}%`) },
+          { description: Like(`%${search}%`) },
+          // Add more fields as needed
+        ],
+        skip: +pageRequest.page * pageRequest.size,
+        take: +pageRequest.size,
+        order: pageRequest.sort.asOrder(),
+      };
+    } else {
+      searchCondition = {
+        skip: +pageRequest.page * pageRequest.size,
+        take: +pageRequest.size,
+        order: pageRequest.sort.asOrder(),
+      };
+    }
+
+    // Fetch courses with the search condition
+    const [courses, _] = await this.courseService.findAndCount(searchCondition);
+
+    for (const course of courses) {
+      const favorite = await this.favoriteService.findByFields({
+        where: { learner: { id: learner.id }, course: { id: course.id } },
+      });
+      course.isFavorite = !!favorite;
+      const comments = await this.commentService.findAndCount({ where: { course: course.id } });
+      course.comments = comments[0];
+      course.overallRating = course.comments.length
+        ? course.comments.reduce((sum, comment) => sum + (comment.rating || 0), 0) / course.comments.length
+        : 0;
+    }
+    HeaderUtil.addPaginationHeaders(req.res, new Page(courses, _, pageRequest));
 
     return courses;
   }

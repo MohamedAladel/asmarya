@@ -87,8 +87,8 @@ export class Config {
 }
 
 const yamlConfigPath = path.join(__dirname, 'config', 'application.yml');
-const envYamlConfigPath = path.join(__dirname, 'config', `application-${process.env.BACKEND_ENV}.yml`);
-//const envYamlConfigPath = path.join(__dirname, 'config', `application-dev.yml`);
+//  const envYamlConfigPath = path.join(__dirname, 'config', `application-${process.env.BACKEND_ENV}.yml`);
+const envYamlConfigPath = path.join(__dirname, 'config', `application-dev.yml`);
 
 const yamlConfig = yaml.load(fs.readFileSync(yamlConfigPath, 'utf8'));
 logger.log(`Actual process.env.BACKEND_ENV value: ${process.env.BACKEND_ENV}`);

@@ -14,7 +14,7 @@ function ormConfig(): TypeOrmModuleOptions {
   let ormconfig: TypeOrmModuleOptions = {
     name: 'default',
     type: 'mysql',
-    database: 'asmarya',
+    database: 'asmarya2',
     host: 'localhost',
     // port: ,
     username: 'root',
@@ -64,12 +64,12 @@ function ormConfig(): TypeOrmModuleOptions {
     ormconfig = {
       name: 'default',
       type: 'mysql',
-      database: 'asmarya',
+      database: 'asmarya2',
       host: 'localhost',
       // port: ,
       username: 'root',
-      password: '4444', // Ensure this matches the password set in Docker
-      logging: false,
+      password: '', // Ensure this matches the password set in Docker
+      logging: true,
       synchronize: commonConf.SYNCRONIZE,
       entities: commonConf.ENTITIES,
       migrations: commonConf.MIGRATIONS,

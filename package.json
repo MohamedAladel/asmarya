@@ -33,7 +33,7 @@
     "test:server:e2e": "npm run test:e2e --workspace server"
   },
   "config": {
-    "default_environment": "prod"
+    "default_environment": "dev"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "6.18.1",
